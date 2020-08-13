@@ -1,5 +1,6 @@
 package com.chuang.rpc.server;
 
+import com.chuang.rpc.registry.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,21 +13,47 @@ import java.util.concurrent.*;
  * 服务端类，监听某端口，循环接收连接请求，如果收到请求就创建一个线程，并调用相关方法处理请求
  * */
 public class RpcServer {
-    // 利用线程池平衡生产和消费数量
-    private final ExecutorService threadPool;
+
     private static final Logger logger = LoggerFactory.getLogger(RpcServer.class);
 
-    public RpcServer(){
-        // 先固定线程池参数
-        int corePoolSize = 5;
-        int maximumPoolSize = 20;
-        long keepAliveTime = 60;
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(100);
+    // 先固定线程池参数，推荐以静态final变量形式确定
+    private static final int CORE_POOL_SIZE = 5;
+    private static final int MAX_POOL_SIZE = 20;
+    private static final int KEEP_ALIVE_TIME = 60;
+    private static final int BLOCKING_QUEUE_CAPACITY = 100;
+
+    // 利用线程池平衡生产和消费数量
+    private final ExecutorService threadPool;
+    // 用ServiceRegistry对象专门负责服务注册
+    private final ServiceRegistry serviceRegistry;
+
+    public RpcServer(ServiceRegistry serviceRegistry){
+        this.serviceRegistry = serviceRegistry;
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
         // 创建线程池
-        threadPool = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS,
+        threadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS,
                 workQueue, Executors.defaultThreadFactory());
     }
 
+    // 调用注册器对服务进行注册，并创建相应线程，提交至线程池中
+    public void start(int port){
+        try(ServerSocket serverSocket = new ServerSocket(port)){
+            logger.info("服务器启动...");
+            Socket socket;
+            while ((socket = serverSocket.accept()) != null){
+                logger.info("客户端连接成功！IP：{}:{}", socket.getInetAddress().getHostAddress(), socket.getPort());
+                // 因使用注册器对象注册服务，因此在线程设计时，将创建线程和逻辑处理分开
+                // RequestHandlerThread是创建出的线程，从ServicRegistry处获得服务对象，将Request对象和服务对象交给RequestHandler
+                // RequestHandler处理请求，调用目标方法，并返回结果，反射等过程也放到此处
+                threadPool.execute(new RequestHandlerThread(socket, new RequestHandler(), serviceRegistry));
+            }
+            threadPool.shutdown();
+        }catch (IOException e){
+            logger.error("服务器启动/注册服务时发生错误：", e);
+        }
+    }
+
+    /*------------不再需要RpcServe对象实现注册，该方法删除------------*/
     // 提供对port的注册功能，持续监视port端口，有输入后，调用service服务执行请求对象中的指定方法
     public void register(Object service, int port){
         try(ServerSocket serverSocket = new ServerSocket(port)){
@@ -34,7 +61,7 @@ public class RpcServer {
             Socket socket;
             while((socket = serverSocket.accept()) != null){
                 logger.info("与客户端连接成功！IP为：{}", socket.getInetAddress().getHostAddress());
-                // 将工作内容作为WorkerThread对象封装，并提交至线程池
+                // 将工作内容作为ThreadWorker对象封装，并提交至线程池
                 threadPool.execute(new ThreadWorker(socket, service));
             }
 

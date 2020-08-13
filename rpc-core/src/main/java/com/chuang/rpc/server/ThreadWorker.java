@@ -13,6 +13,9 @@ import java.lang.reflect.Method;
 import java.net.Socket;
 
 /**
+ * -------------------------------------------------------------
+ * 新版本中被RequestHandler和RequestHandlerThread取代
+ * -------------------------------------------------------------
  * 封装socket和service，用于线程池任务提交
  * run方法中负责获取Request并将Response封装输出
  * */

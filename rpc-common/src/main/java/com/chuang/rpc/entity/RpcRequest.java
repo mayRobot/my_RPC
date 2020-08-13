@@ -12,7 +12,7 @@ import java.io.Serializable;
 @Data
 @Builder
 public class RpcRequest implements Serializable {
-    //接口名称
+    //待调用对象的接口名称
     private String interfaceName;
     //待调用方法名称
     private String methodName;
