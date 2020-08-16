@@ -1,9 +1,10 @@
-package com.chuang.test;
+package com.chuang.rpc.test;
 
 import com.chuang.rpc.api.HelloService;
+import com.chuang.rpc.interfaces.RpcServer;
 import com.chuang.rpc.registry.DefaultServiceRegistry;
 import com.chuang.rpc.registry.ServiceRegistry;
-import com.chuang.rpc.server.RpcServer;
+import com.chuang.rpc.socket.server.SocketServer;
 
 /**
  * 测试服务端，创建RpcServer客户端对象，serviceRegistry负责注册服务
@@ -16,7 +17,7 @@ public class TestServer {
         ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
         serviceRegistry.register(helloService);
 
-        RpcServer rpcServer = new RpcServer(serviceRegistry);
+        RpcServer rpcServer = new SocketServer(serviceRegistry);
         rpcServer.start(9000);
 
 //        RpcServer rpcServer = new RpcServer();

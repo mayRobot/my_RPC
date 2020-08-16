@@ -1,4 +1,4 @@
-package com.chuang.test;
+package com.chuang.rpc.test;
 
 import com.chuang.rpc.api.HelloObject;
 import com.chuang.rpc.api.HelloService;

@@ -1,6 +1,10 @@
-package com.chuang.rpc.server;
+package com.chuang.rpc.socket.server;
 
+import com.chuang.rpc.interfaces.RpcServer;
 import com.chuang.rpc.registry.ServiceRegistry;
+import com.chuang.rpc.server.RequestHandler;
+import com.chuang.rpc.server.RequestHandlerThread;
+import com.chuang.rpc.server.ThreadWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,11 +14,11 @@ import java.net.Socket;
 import java.util.concurrent.*;
 
 /**
+ * 以Socket方式实现的RpcServer
  * 服务端类，监听某端口，循环接收连接请求，如果收到请求就创建一个线程，并调用相关方法处理请求
  * */
-public class RpcServer {
-
-    private static final Logger logger = LoggerFactory.getLogger(RpcServer.class);
+public class SocketServer implements RpcServer {
+    private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
 
     // 先固定线程池参数，推荐以静态final变量形式确定
     private static final int CORE_POOL_SIZE = 5;
@@ -27,7 +31,7 @@ public class RpcServer {
     // 用ServiceRegistry对象专门负责服务注册
     private final ServiceRegistry serviceRegistry;
 
-    public RpcServer(ServiceRegistry serviceRegistry){
+    public SocketServer(ServiceRegistry serviceRegistry){
         this.serviceRegistry = serviceRegistry;
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
         // 创建线程池
@@ -35,7 +39,8 @@ public class RpcServer {
                 workQueue, Executors.defaultThreadFactory());
     }
 
-    // 调用注册器对服务进行注册，并创建相应线程，提交至线程池中
+    // 前期调用注册器对服务进行注册后，收到请求，创建相应线程，提交至线程池中，线程对所要求的目标服务进行搜索、处理
+    @Override
     public void start(int port){
         try(ServerSocket serverSocket = new ServerSocket(port)){
             logger.info("服务器启动...");

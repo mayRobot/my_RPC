@@ -1,5 +1,6 @@
 package com.chuang.rpc.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import java.io.Serializable;
  * */
 @Data
 @Builder
+@AllArgsConstructor
 public class RpcRequest implements Serializable {
     //待调用对象的接口名称
     private String interfaceName;

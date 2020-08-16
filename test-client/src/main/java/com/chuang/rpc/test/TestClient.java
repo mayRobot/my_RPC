@@ -1,8 +1,10 @@
-package com.chuang.test;
+package com.chuang.rpc.test;
 
 import com.chuang.rpc.api.HelloObject;
 import com.chuang.rpc.api.HelloService;
 import com.chuang.rpc.client.RpcClientProxy;
+import com.chuang.rpc.interfaces.RpcClient;
+import com.chuang.rpc.socket.client.SocketClient;
 
 /**
  * 测试客户端：通过动态代理，创建hello服务对象，并创建helloObject存储发送的信息，通过hello服务发送
@@ -11,9 +13,10 @@ import com.chuang.rpc.client.RpcClientProxy;
  * */
 public class TestClient {
     public static void main(String[] args) {
-        RpcClientProxy proxy = new RpcClientProxy("172.16.9.146", 9000);
+        RpcClient rpcClient = new SocketClient("172.16.9.146", 9000);
+        RpcClientProxy proxy = new RpcClientProxy(rpcClient);
         HelloService helloService = proxy.getProxy(HelloService.class);
-        HelloObject helloObject = new HelloObject(55, "This is a message");
+        HelloObject helloObject = new HelloObject(78, "This is a message");
 
         // hello方法在客户端并不执行，仅仅起到告知服务端需要执行哪个方法的作用
         String response = helloService.hello(helloObject);
