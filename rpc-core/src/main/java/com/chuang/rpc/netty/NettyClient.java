@@ -6,6 +6,7 @@ import com.chuang.rpc.entity.RpcRequest;
 import com.chuang.rpc.entity.RpcResponse;
 import com.chuang.rpc.interfaces.RpcClient;
 import com.chuang.rpc.serializer.JsonSerializer;
+import com.chuang.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -53,14 +54,15 @@ public class NettyClient implements RpcClient {
                         ChannelPipeline pipeline = socketChannel.pipeline();
 
                         // 使用自定义的解码器、编码器、处理类
-//                        pipeline.addLast("decoder", new CommonDecoder())
-//                                .addLast("encoder", new CommonEncoder(new JsonSerializer()))
-
-                        pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers.cacheDisabled(
-                                this.getClass().getClassLoader()
-                        )))
-                                .addLast("encoder", new ObjectEncoder())
+                        pipeline.addLast("decoder", new CommonDecoder())
+                                .addLast("encoder", new CommonEncoder(new KryoSerializer()))
                                 .addLast("handler", new NettyClientHandler());
+
+//                        pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers.cacheDisabled(
+//                                this.getClass().getClassLoader()
+//                        )))
+//                                .addLast("encoder", new ObjectEncoder())
+//                                .addLast("handler", new NettyClientHandler());
                     }
                 });
     }

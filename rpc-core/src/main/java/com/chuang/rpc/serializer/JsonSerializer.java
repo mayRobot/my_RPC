@@ -32,6 +32,7 @@ public class JsonSerializer implements Serializer {
     @Override
     public Object deserialize(byte[] bytes, Class<?> clazz) {
         try{
+            // 将bytes按照clazz类别还原
             Object object = objectMapper.readValue(bytes, clazz);
             if(object instanceof RpcRequest){
                 object = handleRequest(object);

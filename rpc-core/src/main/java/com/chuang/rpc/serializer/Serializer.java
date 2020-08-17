@@ -14,6 +14,8 @@ public interface Serializer {
     // 通过编号获取序列化器
     static Serializer getSerializerByCode(int code){
         switch (code){
+            case 0:
+                return new KryoSerializer();
             case 1:
                 return new JsonSerializer();
             default:

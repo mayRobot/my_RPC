@@ -4,6 +4,7 @@ import com.chuang.rpc.codec.CommonDecoder;
 import com.chuang.rpc.codec.CommonEncoder;
 import com.chuang.rpc.interfaces.RpcServer;
 import com.chuang.rpc.serializer.JsonSerializer;
+import com.chuang.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -49,13 +50,15 @@ public class NettyServer implements RpcServer {
                             ChannelPipeline pipeline = socketChannel.pipeline();
 
                             // 使用自定义的编码器、解码器、处理类
-//                            pipeline.addLast("encoder", new CommonEncoder(new JsonSerializer()));
-//                            pipeline.addLast("decoder", new CommonDecoder());
-                            pipeline.addLast("encoder", new ObjectEncoder());
-                            pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers.cacheDisabled(
-                                    this.getClass().getClassLoader()
-                            )));
+                            pipeline.addLast("encoder", new CommonEncoder(new KryoSerializer()));
+                            pipeline.addLast("decoder", new CommonDecoder());
                             pipeline.addLast("handler", new NettyServerHandler());
+
+//                            pipeline.addLast("encoder", new ObjectEncoder());
+//                            pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers.cacheDisabled(
+//                                    this.getClass().getClassLoader()
+//                            )));
+//                            pipeline.addLast("handler", new NettyServerHandler());
                         }
                     });
             // 绑定port端口，并阻塞当前程序待绑定完成
