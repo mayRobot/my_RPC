@@ -34,6 +34,7 @@ public class RequestHandler {
 
     /*
     * 调用目标方法
+    * 传入rpcRequest对象及服务对象，从request中获取目标方法、参数类型和参数，由服务对象调用
     * 专门实现目标方法的调用，若无法找到该方法，则返回相应状态码
     * */
     private Object invokeTargeMethod(RpcRequest rpcRequest, Object serviceObject) throws InvocationTargetException, IllegalAccessException {

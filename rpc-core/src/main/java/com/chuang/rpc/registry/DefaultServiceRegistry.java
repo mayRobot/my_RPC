@@ -18,8 +18,8 @@ public class DefaultServiceRegistry implements ServiceRegistry{
 
     // 将服务名和执行服务的对象放于线程安全的concurrentHashMap中，并使用set保存当前已被注册的对象，服务名默认为对象实现的接口名
     // 默认将对象实现的服务接口作为服务名，若某对象实现多个接口，则两个服务名对应同一个对象，同一时间，某个接口只能有一个对象提供服务
-    private final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
-    private final Set<String> registeredService = ConcurrentHashMap.newKeySet();
+    private static final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
+    private static final Set<String> registeredService = ConcurrentHashMap.newKeySet();
 
     @Override
     public synchronized <T> void register(T service) {

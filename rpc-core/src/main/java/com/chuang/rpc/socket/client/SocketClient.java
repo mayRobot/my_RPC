@@ -38,7 +38,7 @@ public class SocketClient implements RpcClient {
             // 将RpcRequest请求对象作为object参数传入socket输出流中，供服务端接收并通过readObject方法读取
             objectOutputStream.writeObject(rpcRequest);
             objectOutputStream.flush();
-            // 2.0后，因proxy必须返回response，正好可以对其状态进行检查
+            // 2.0后，对response对象状态进行检查
             RpcResponse rpcResponse = (RpcResponse)objectInputStream.readObject();
             if(rpcResponse == null) {
                 logger.error("服务调用失败，service：{}", rpcRequest.getInterfaceName());

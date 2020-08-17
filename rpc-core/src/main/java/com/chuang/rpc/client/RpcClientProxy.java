@@ -39,8 +39,7 @@ public class RpcClientProxy implements InvocationHandler {
         RpcRequest rpcRequest = new RpcRequest(method.getDeclaringClass().getName(), method.getName()
         , method.getParameterTypes(), args);
 
-        //RpcClient rpcClient = new RpcClient();
-        //return ((RpcResponse)rpcClient.sendRequest(rpcRequest)).getData();
+        // V2.0开始，sendRequest返回response的data部分
         return rpcClient.sendRequest(rpcRequest);
     }
 }

@@ -3,7 +3,9 @@ package com.chuang.rpc.exception;
 import com.chuang.rpc.enumeration.RPCError;
 
 /**
- * RPC异常，目前用于服务对象注册
+ * RPC异常，用于
+ *      服务对象注册
+ *      序列化
  * */
 public class RPCException extends RuntimeException{
     public RPCException(RPCError error, String detail) {
