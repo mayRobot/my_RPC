@@ -41,6 +41,11 @@
             <version>4.0.2</version>
         </dependency>
         <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.chuang</groupId>
             <artifactId>rpc-api</artifactId>
             <version>1.0-SNAPSHOT</version>

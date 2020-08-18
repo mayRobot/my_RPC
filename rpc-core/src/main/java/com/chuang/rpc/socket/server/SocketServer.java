@@ -1,7 +1,10 @@
 package com.chuang.rpc.socket.server;
 
+import com.chuang.rpc.enumeration.RPCError;
+import com.chuang.rpc.exception.RPCException;
 import com.chuang.rpc.interfaces.RpcServer;
-import com.chuang.rpc.registry.ServiceRegistry;
+import com.chuang.rpc.provider.ServiceProvider;
+import com.chuang.rpc.serializer.Serializer;
 import com.chuang.rpc.server.RequestHandler;
 import com.chuang.rpc.server.RequestHandlerThread;
 import com.chuang.rpc.server.ThreadWorker;
@@ -29,10 +32,11 @@ public class SocketServer implements RpcServer {
     // 利用线程池平衡生产和消费数量
     private final ExecutorService threadPool;
     // 用ServiceRegistry对象专门负责服务注册
-    private final ServiceRegistry serviceRegistry;
+    private final ServiceProvider serviceProvider;
+    private Serializer serializer;
 
-    public SocketServer(ServiceRegistry serviceRegistry){
-        this.serviceRegistry = serviceRegistry;
+    public SocketServer(ServiceProvider serviceProvider){
+        this.serviceProvider = serviceProvider;
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
         // 创建线程池
         threadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS,
@@ -42,6 +46,11 @@ public class SocketServer implements RpcServer {
     // 前期调用注册器对服务进行注册后，收到请求，创建相应线程，提交至线程池中，线程对所要求的目标服务进行搜索、处理
     @Override
     public void start(int port){
+        if(serializer == null){
+            logger.error("未设置序列化器");
+            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
+        }
+
         try(ServerSocket serverSocket = new ServerSocket(port)){
             logger.info("服务器启动...");
             Socket socket;
@@ -50,12 +59,17 @@ public class SocketServer implements RpcServer {
                 // 因使用注册器对象注册服务，因此在线程设计时，将创建线程和逻辑处理分开
                 // RequestHandlerThread是创建出的线程，从ServicRegistry处获得服务对象，将Request对象和服务对象交给RequestHandler
                 // RequestHandler处理请求，调用目标方法，并返回结果，反射等过程也放到此处
-                threadPool.execute(new RequestHandlerThread(socket, new RequestHandler(), serviceRegistry));
+                threadPool.execute(new RequestHandlerThread(socket, new RequestHandler(), serviceProvider, serializer));
             }
             threadPool.shutdown();
         }catch (IOException e){
             logger.error("服务器启动/注册服务时发生错误：", e);
         }
+    }
+
+    @Override
+    public void setSerializer(Serializer serializer) {
+        this.serializer = serializer;
     }
 
     /*------------不再需要RpcServe对象实现注册，该方法删除------------*/

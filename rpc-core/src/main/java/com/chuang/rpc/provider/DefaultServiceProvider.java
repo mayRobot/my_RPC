@@ -1,4 +1,4 @@
-package com.chuang.rpc.registry;
+package com.chuang.rpc.provider;
 
 import com.chuang.rpc.enumeration.RPCError;
 import com.chuang.rpc.exception.RPCException;
@@ -10,11 +10,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 默认的注册类，提供服务对象注册、对应接口查询等功能
+ * 默认的注册类，提供服务对象注册、对应接口查询等功能，将服务注册在服务端，使客户端可以直接调用注册在此的接口对应的服务对象
  * */
-public class DefaultServiceRegistry implements ServiceRegistry{
+public class DefaultServiceProvider implements ServiceProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultServiceRegistry.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultServiceProvider.class);
 
     // 将服务名和执行服务的对象放于线程安全的concurrentHashMap中，并使用set保存当前已被注册的对象，服务名默认为对象实现的接口名
     // 默认将对象实现的服务接口作为服务名，若某对象实现多个接口，则两个服务名对应同一个对象，同一时间，某个接口只能有一个对象提供服务

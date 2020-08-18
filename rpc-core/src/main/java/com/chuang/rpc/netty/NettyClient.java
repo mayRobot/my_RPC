@@ -4,17 +4,16 @@ import com.chuang.rpc.codec.CommonDecoder;
 import com.chuang.rpc.codec.CommonEncoder;
 import com.chuang.rpc.entity.RpcRequest;
 import com.chuang.rpc.entity.RpcResponse;
+import com.chuang.rpc.enumeration.RPCError;
+import com.chuang.rpc.exception.RPCException;
 import com.chuang.rpc.interfaces.RpcClient;
-import com.chuang.rpc.serializer.JsonSerializer;
 import com.chuang.rpc.serializer.KryoSerializer;
+import com.chuang.rpc.serializer.Serializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +28,8 @@ public class NettyClient implements RpcClient {
 
     private String host;
     private int port;
+    private Serializer serializer;
     private static final Bootstrap bootstrap;
-
-    public NettyClient(String host, int port) {
-        this.host = host;
-        this.port = port;
-    }
 
     /**
      * 在静态代码块中直接配置好
@@ -46,29 +41,45 @@ public class NettyClient implements RpcClient {
         bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.SO_KEEPALIVE, true)
-                .handler(new ChannelInitializer<SocketChannel>() {
+                .option(ChannelOption.SO_KEEPALIVE, true);
 
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        ChannelPipeline pipeline = socketChannel.pipeline();
+    }
 
-                        // 使用自定义的解码器、编码器、处理类
-                        pipeline.addLast("decoder", new CommonDecoder())
-                                .addLast("encoder", new CommonEncoder(new KryoSerializer()))
-                                .addLast("handler", new NettyClientHandler());
+    public NettyClient(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    private boolean shouldSetSerializer = false;
+    @Override
+    public Object sendRequest(RpcRequest rpcRequest) {
+        // 配置序列化器
+        // 在发送请求前检查是否有序列化器，懒汉式
+        if(serializer == null){
+            logger.error("未设置序列化器");
+            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
+        }else if(!shouldSetSerializer){
+            //仅第一次发送或更改了序列化器时设置序列化器
+            shouldSetSerializer = true;
+            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel socketChannel) throws Exception {
+                    ChannelPipeline pipeline = socketChannel.pipeline();
+
+                    // 使用自定义的解码器、编码器、处理类
+                    pipeline.addLast("decoder", new CommonDecoder())
+                            .addLast("encoder", new CommonEncoder(serializer))
+                            .addLast("handler", new NettyClientHandler());
 
 //                        pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers.cacheDisabled(
 //                                this.getClass().getClassLoader()
 //                        )))
 //                                .addLast("encoder", new ObjectEncoder())
 //                                .addLast("handler", new NettyClientHandler());
-                    }
-                });
-    }
-
-    @Override
-    public Object sendRequest(RpcRequest rpcRequest) {
+                }
+            });
+        }
+        // 执行发送请求程序
         try{
             // TODO ChannelFuture功能
             ChannelFuture future = bootstrap.connect(host, port).sync();
@@ -104,5 +115,11 @@ public class NettyClient implements RpcClient {
             logger.error("发送消息时失败：", e);
         }
         return null;
+    }
+
+    @Override
+    public void setSerializer(Serializer serializer) {
+        this.serializer = serializer;
+        shouldSetSerializer = false;
     }
 }

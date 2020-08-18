@@ -2,9 +2,12 @@ package com.chuang.rpc.netty;
 
 import com.chuang.rpc.codec.CommonDecoder;
 import com.chuang.rpc.codec.CommonEncoder;
+import com.chuang.rpc.enumeration.RPCError;
+import com.chuang.rpc.exception.RPCException;
 import com.chuang.rpc.interfaces.RpcServer;
 import com.chuang.rpc.serializer.JsonSerializer;
 import com.chuang.rpc.serializer.KryoSerializer;
+import com.chuang.rpc.serializer.Serializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -26,8 +29,15 @@ public class NettyServer implements RpcServer {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
 
+    private Serializer serializer;
+
     @Override
     public void start(int port) {
+        if(serializer == null){
+            logger.error("未设置序列化器");
+            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
+        }
+
         // 线程组，可以理解为线程池，默认线程数是CPU核心树*2，bossgroup负责接收客户端传来的请求，workerGroup则负责后续处理
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -50,7 +60,7 @@ public class NettyServer implements RpcServer {
                             ChannelPipeline pipeline = socketChannel.pipeline();
 
                             // 使用自定义的编码器、解码器、处理类
-                            pipeline.addLast("encoder", new CommonEncoder(new KryoSerializer()));
+                            pipeline.addLast("encoder", new CommonEncoder(serializer));
                             pipeline.addLast("decoder", new CommonDecoder());
                             pipeline.addLast("handler", new NettyServerHandler());
 
@@ -71,6 +81,10 @@ public class NettyServer implements RpcServer {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
 
+    @Override
+    public void setSerializer(Serializer serializer) {
+        this.serializer = serializer;
     }
 }

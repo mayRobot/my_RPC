@@ -1,7 +1,6 @@
 package com.chuang.rpc.serializer;
 
 import com.chuang.rpc.api.HelloObject;
-import com.chuang.rpc.api.HelloService;
 import com.chuang.rpc.entity.RpcRequest;
 
 import java.lang.reflect.Method;
@@ -12,9 +11,7 @@ public class TestSerializer {
         //RpcRequest(interfaceName=com.chuang.rpc.api.HelloService, methodName=hello,
         // paramsTypes=[class com.chuang.rpc.api.HelloObject], params=[HelloObject(id=88, message=This a Netty message)])
 
-        //TestSerializer testSerializer = new TestSerializer();
         Serializer serializer = new JsonSerializer();
-        //HelloService helloService = testSerializer.getProxy(HelloService.class);
 
         HelloObject helloObject = new HelloObject(78, "This is a message");
         RpcRequest request = new RpcRequest("com.chuang.rpc.api.HelloService", "hello",

@@ -2,8 +2,8 @@ package com.chuang.rpc.netty;
 
 import com.chuang.rpc.entity.RpcRequest;
 import com.chuang.rpc.entity.RpcResponse;
-import com.chuang.rpc.registry.DefaultServiceRegistry;
-import com.chuang.rpc.registry.ServiceRegistry;
+import com.chuang.rpc.provider.DefaultServiceProvider;
+import com.chuang.rpc.provider.ServiceProvider;
 import com.chuang.rpc.server.RequestHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -25,12 +25,12 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
 
     private static final Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
 
-    private static ServiceRegistry serviceRegistry;
+    private static ServiceProvider serviceProvider;
     private static RequestHandler requestHandler;
 
     static {
         requestHandler = new RequestHandler();
-        serviceRegistry = new DefaultServiceRegistry();
+        serviceProvider = new DefaultServiceProvider();
     }
 
     @Override
@@ -39,7 +39,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
             logger.info("[NettyServerHandler]：服务器开始对请求 {} 使用目标服务对象调用目标方法", rpcRequest);
             // 获取目标服务对象接口，用于寻找服务对象
             String interfaceName = rpcRequest.getInterfaceName();
-            Object serviceObject = serviceRegistry.getService(interfaceName);
+            Object serviceObject = serviceProvider.getService(interfaceName);
             // 交由RequestHandler处理
             Object result = requestHandler.handle(rpcRequest, serviceObject);
 
