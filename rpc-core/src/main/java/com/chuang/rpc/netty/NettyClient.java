@@ -17,6 +17,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.net.InetSocketAddress;
+
 
 /**
  * Netty方式实现的客户端，实现RpcClient接口
@@ -31,7 +33,7 @@ public class NettyClient implements RpcClient {
     private Serializer serializer;
     private static final Bootstrap bootstrap;
 
-    /**
+    /*
      * 在静态代码块中直接配置好
      * */
     static {
@@ -50,7 +52,6 @@ public class NettyClient implements RpcClient {
         this.port = port;
     }
 
-    private boolean shouldSetSerializer = false;
     @Override
     public Object sendRequest(RpcRequest rpcRequest) {
         // 配置序列化器
@@ -58,36 +59,19 @@ public class NettyClient implements RpcClient {
         if(serializer == null){
             logger.error("未设置序列化器");
             throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
-        }else if(!shouldSetSerializer){
-            //仅第一次发送或更改了序列化器时设置序列化器
-            shouldSetSerializer = true;
-            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                protected void initChannel(SocketChannel socketChannel) throws Exception {
-                    ChannelPipeline pipeline = socketChannel.pipeline();
-
-                    // 使用自定义的解码器、编码器、处理类
-                    pipeline.addLast("decoder", new CommonDecoder())
-                            .addLast("encoder", new CommonEncoder(serializer))
-                            .addLast("handler", new NettyClientHandler());
-
-//                        pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers.cacheDisabled(
-//                                this.getClass().getClassLoader()
-//                        )))
-//                                .addLast("encoder", new ObjectEncoder())
-//                                .addLast("handler", new NettyClientHandler());
-                }
-            });
         }
         // 执行发送请求程序
         try{
             // TODO ChannelFuture功能
-            ChannelFuture future = bootstrap.connect(host, port).sync();
-            logger.info("客户端连接至服务端 {}:{}", host, port);
+//            ChannelFuture future = bootstrap.connect(host, port).sync();
+//            logger.info("客户端连接至服务端 {}:{}", host, port);
+//
+//            // 获取channel
+//            Channel channel = future.channel();
 
-            // 获取channel
-            Channel channel = future.channel();
-            if(channel != null){
+            // 获取channel：通过ChannelProvider提供channel，其内部支持失败重连
+            Channel channel = ChannelProvider.get(new InetSocketAddress(host, port), serializer);
+            if(channel.isActive()){
                 // channel将RpcRequest对象flush，并且等待结果返回
                 // TODO addListener功能
                 channel.writeAndFlush(rpcRequest).addListener(future1 -> {
@@ -109,6 +93,8 @@ public class NettyClient implements RpcClient {
                 RpcResponse rpcResponse = channel.attr(key).get();
                 logger.info("rpcResponse:{}", rpcResponse.toString());
                 return rpcResponse.getData();
+            }else{
+                System.exit(0);
             }
 
         } catch (InterruptedException e) {
@@ -120,6 +106,5 @@ public class NettyClient implements RpcClient {
     @Override
     public void setSerializer(Serializer serializer) {
         this.serializer = serializer;
-        shouldSetSerializer = false;
     }
 }

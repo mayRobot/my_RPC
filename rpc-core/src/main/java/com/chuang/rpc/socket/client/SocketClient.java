@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Date;
 
 /**
  * socket方式实现的RpcClient
@@ -50,9 +51,10 @@ public class SocketClient implements RpcClient {
             // 将RpcRequest请求对象作为object参数传入socket输出流中，供服务端接收并通过readObject方法读取
             // V2.2：使用专门定义的ObjectWriter和Reader类，实现增加序列化器的socket传输
             ObjectWriter.writeObject(outputStream, rpcRequest, serializer);
-            logger.info("编码器：{} 编码结束，已发送", serializer.getClass());
+            logger.info("{}---编码器：{} 编码结束，已发送", new Date(), serializer.getClass());
             // 2.0后，对response对象状态进行检查
             RpcResponse rpcResponse = (RpcResponse) ObjectReader.readObject(inputStream);
+
             if(rpcResponse == null) {
                 logger.error("服务调用失败，service：{}", rpcRequest.getInterfaceName());
                 throw new RPCException(RPCError.SERVICE_INVOCATION_FAILURE, " service:" + rpcRequest.getInterfaceName());
