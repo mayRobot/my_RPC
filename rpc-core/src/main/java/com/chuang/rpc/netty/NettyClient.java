@@ -7,6 +7,8 @@ import com.chuang.rpc.entity.RpcResponse;
 import com.chuang.rpc.enumeration.RPCError;
 import com.chuang.rpc.exception.RPCException;
 import com.chuang.rpc.interfaces.RpcClient;
+import com.chuang.rpc.registry.NacosServiceRegistry;
+import com.chuang.rpc.registry.ServiceRegistry;
 import com.chuang.rpc.serializer.KryoSerializer;
 import com.chuang.rpc.serializer.Serializer;
 import io.netty.bootstrap.Bootstrap;
@@ -28,10 +30,15 @@ public class NettyClient implements RpcClient {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyClient.class);
 
-    private String host;
-    private int port;
+    // 要连接的服务端的host和port，V3.0后可直接从获取到的Server中得到
+//    private String host;
+//    private int port;
+    // 序列化器
     private Serializer serializer;
+    // netty的启动辅助类
     private static final Bootstrap bootstrap;
+    // 注册中心
+    private final ServiceRegistry serviceRegistry;
 
     /*
      * 在静态代码块中直接配置好
@@ -39,7 +46,7 @@ public class NettyClient implements RpcClient {
     static {
         // 线程组，客户端只用一个，而服务端用两个，详见笔记
         EventLoopGroup group = new NioEventLoopGroup();
-        // 服务端启动辅助类，为Netty程序启动组装配置一些必要组件
+        // 启动辅助类，为Netty程序启动组装配置一些必要组件
         bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
@@ -47,9 +54,8 @@ public class NettyClient implements RpcClient {
 
     }
 
-    public NettyClient(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public NettyClient() {
+        this.serviceRegistry = new NacosServiceRegistry();
     }
 
     @Override
@@ -69,8 +75,10 @@ public class NettyClient implements RpcClient {
 //            // 获取channel
 //            Channel channel = future.channel();
 
+            // 从注册中心获取服务端信息，并交给ChannelProvider进行连接
+            InetSocketAddress inetSocketAddress =  serviceRegistry.lookupService(rpcRequest.getInterfaceName());
             // 获取channel：通过ChannelProvider提供channel，其内部支持失败重连
-            Channel channel = ChannelProvider.get(new InetSocketAddress(host, port), serializer);
+            Channel channel = ChannelProvider.get(inetSocketAddress, serializer);
             if(channel.isActive()){
                 // channel将RpcRequest对象flush，并且等待结果返回
                 // TODO addListener功能

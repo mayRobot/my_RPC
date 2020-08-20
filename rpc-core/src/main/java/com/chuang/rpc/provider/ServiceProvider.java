@@ -6,7 +6,7 @@ package com.chuang.rpc.provider;
  * */
 public interface ServiceProvider {
     // 注册服务信息
-    <T> void register(T service);
+    <T> void addService(T service);
     // 获取执行服务的服务对象
     Object getService(String serviceName);
 }

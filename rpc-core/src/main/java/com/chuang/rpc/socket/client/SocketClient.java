@@ -6,6 +6,8 @@ import com.chuang.rpc.enumeration.RPCError;
 import com.chuang.rpc.enumeration.ResponseCode;
 import com.chuang.rpc.exception.RPCException;
 import com.chuang.rpc.interfaces.RpcClient;
+import com.chuang.rpc.registry.NacosServiceRegistry;
+import com.chuang.rpc.registry.ServiceRegistry;
 import com.chuang.rpc.serializer.Serializer;
 import com.chuang.rpc.socket.utils.ObjectReader;
 import com.chuang.rpc.socket.utils.ObjectWriter;
@@ -14,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Date;
 
@@ -24,14 +27,16 @@ import java.util.Date;
 public class SocketClient implements RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(SocketClient.class);
 
-    private final String host;
-    private final int port;
-
+    // 要连接的服务端的host和port,V3.0后可直接从获取到的Server中得到
+//    private final String host;
+//    private final int port;
+    // 序列化器
     private Serializer serializer;
+    // 注册中心
+    private final ServiceRegistry serviceRegistry;
 
-    public SocketClient(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public SocketClient() {
+        this.serviceRegistry = new NacosServiceRegistry();
     }
 
     /* 发送请求，并获取返回的输入流
@@ -44,8 +49,11 @@ public class SocketClient implements RpcClient {
             logger.error("未设置序列化器");
             throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
         }
-
-        try(Socket socket = new Socket(host, port)){
+        // 从注册中心获取服务端信息，并交给socket进行连接
+        InetSocketAddress inetSocketAddress =  serviceRegistry.lookupService(rpcRequest.getInterfaceName());
+        try(Socket socket = new Socket()){
+            // 不在构造socket时使用，而是调用connect方法使用inetSocketAddress
+            socket.connect(inetSocketAddress);
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = socket.getInputStream();
             // 将RpcRequest请求对象作为object参数传入socket输出流中，供服务端接收并通过readObject方法读取

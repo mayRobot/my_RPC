@@ -1,5 +1,6 @@
 package com.chuang.rpc.test;
 
+import com.chuang.rpc.api.ByeService;
 import com.chuang.rpc.api.HelloObject;
 import com.chuang.rpc.api.HelloService;
 import com.chuang.rpc.client.RpcClientProxy;
@@ -10,7 +11,8 @@ import com.chuang.rpc.serializer.KryoSerializer;
 
 public class NettyTestClient {
     public static void main(String[] args) {
-        RpcClient rpcClient = new NettyClient("172.16.9.146", 9999);
+        // V3.0后，client无需设置host port，其他过程不变
+        RpcClient rpcClient = new NettyClient();
         // V2.1后 必须显式设置序列化器
         rpcClient.setSerializer(new KryoSerializer());
         // 动态代理
@@ -21,6 +23,11 @@ public class NettyTestClient {
         HelloObject object = new HelloObject(88, "This a Netty message");
 
         String responseWord = service.hello(object);
+        System.out.println(responseWord);
+
+        ByeService byeService = proxy.getProxy(ByeService.class);
+
+        responseWord = byeService.bye();
         System.out.println(responseWord);
     }
 }

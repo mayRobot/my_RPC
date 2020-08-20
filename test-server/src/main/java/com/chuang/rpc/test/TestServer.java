@@ -4,7 +4,6 @@ import com.chuang.rpc.api.HelloService;
 import com.chuang.rpc.interfaces.RpcServer;
 import com.chuang.rpc.provider.DefaultServiceProvider;
 import com.chuang.rpc.provider.ServiceProvider;
-import com.chuang.rpc.registry.ServiceRegistry;
 import com.chuang.rpc.serializer.JsonSerializer;
 import com.chuang.rpc.socket.server.SocketServer;
 
@@ -14,14 +13,14 @@ import com.chuang.rpc.socket.server.SocketServer;
  * */
 public class TestServer {
     public static void main(String[] args) {
-        HelloService helloService = new HelloServiceImpl();
-        // 由serviceRegistry负责注册服务
-        ServiceProvider serviceProvider = new DefaultServiceProvider();
-        serviceProvider.register(helloService);
-
-        RpcServer rpcServer = new SocketServer(serviceProvider);
-        rpcServer.setSerializer(new JsonSerializer());
-        rpcServer.start(9999);
+//        HelloService helloService = new HelloServiceImpl();
+//        // 由serviceRegistry负责注册服务
+//        ServiceProvider serviceProvider = new DefaultServiceProvider();
+//        serviceProvider.addService(helloService);
+//
+//        RpcServer rpcServer = new SocketServer(serviceProvider);
+//        rpcServer.setSerializer(new JsonSerializer());
+//        rpcServer.start(9999);
 
 //        RpcServer rpcServer = new RpcServer();
 //        HelloService helloService = new HelloServiceImpl();

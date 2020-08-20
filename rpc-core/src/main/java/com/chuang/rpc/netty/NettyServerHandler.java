@@ -19,18 +19,22 @@ import org.slf4j.LoggerFactory;
  * 处于责任链尾部，无需关心编解码、序列化的问题，直接处理请求对象rpcRequest
  * 因为要处理发送的rpcRequest，因此限定为RpcRequest
  * 接收rpcRequest，读取其中各项信息，锁定目标服务对象和方法，并进行调用，将结果作为response返回
- * 通过服务注册表serviceRegistry获取服务对象，处理实施交由requestHandler
+ * 通过服务注册表serviceProvider获取服务对象，处理实施交由requestHandler
  * */
 public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
 
-    private static ServiceProvider serviceProvider;
+    private ServiceProvider serviceProvider;
     private static RequestHandler requestHandler;
 
     static {
         requestHandler = new RequestHandler();
-        serviceProvider = new DefaultServiceProvider();
+    }
+
+    public NettyServerHandler(ServiceProvider serviceProvider){
+        // V3.0：因为每个Server都将注册到Nacos中，因此所有server不再共用注册表serviceProvider中的serviceMap
+        this.serviceProvider = serviceProvider;
     }
 
     @Override

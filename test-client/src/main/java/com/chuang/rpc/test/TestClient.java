@@ -14,7 +14,8 @@ import com.chuang.rpc.socket.client.SocketClient;
  * */
 public class TestClient {
     public static void main(String[] args) {
-        RpcClient rpcClient = new SocketClient("172.16.9.146", 9999);
+        // V3.0后，client无需设置host port，其他过程不变
+        RpcClient rpcClient = new SocketClient();
         // V2.1后 必须显式设置序列化器
         rpcClient.setSerializer(new JsonSerializer());
 

@@ -1,6 +1,8 @@
 package com.chuang.rpc.registry;
 
 
+import com.chuang.rpc.socket.server.SocketServer;
+
 import java.net.InetSocketAddress;
 
 /**

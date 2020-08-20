@@ -18,7 +18,7 @@ public class ConcurrentTestClient {
         new Thread("t1"){
             @Override
             public void run() {
-                RpcClient client = new SocketClient("172.16.9.146", 9999);
+                RpcClient client = new SocketClient();
                 client.setSerializer(new JsonSerializer());
                 RpcClientProxy proxy = new RpcClientProxy(client);
 
@@ -34,7 +34,7 @@ public class ConcurrentTestClient {
         new Thread("t2"){
             @Override
             public void run() {
-                RpcClient client = new SocketClient("172.16.9.146", 9999);
+                RpcClient client = new SocketClient();
                 client.setSerializer(new KryoSerializer());
                 RpcClientProxy proxy = new RpcClientProxy(client);
 
