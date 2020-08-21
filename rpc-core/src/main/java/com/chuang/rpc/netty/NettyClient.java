@@ -7,6 +7,7 @@ import com.chuang.rpc.entity.RpcResponse;
 import com.chuang.rpc.enumeration.RPCError;
 import com.chuang.rpc.exception.RPCException;
 import com.chuang.rpc.interfaces.RpcClient;
+import com.chuang.rpc.loadbalancer.RoundLoadBalancer;
 import com.chuang.rpc.registry.NacosServiceRegistry;
 import com.chuang.rpc.registry.ServiceRegistry;
 import com.chuang.rpc.serializer.KryoSerializer;
@@ -76,7 +77,7 @@ public class NettyClient implements RpcClient {
 //            Channel channel = future.channel();
 
             // 从注册中心获取服务端信息，并交给ChannelProvider进行连接
-            InetSocketAddress inetSocketAddress =  serviceRegistry.lookupService(rpcRequest.getInterfaceName());
+            InetSocketAddress inetSocketAddress =  serviceRegistry.lookupService(rpcRequest.getInterfaceName(), new RoundLoadBalancer());
             // 获取channel：通过ChannelProvider提供channel，其内部支持失败重连
             Channel channel = ChannelProvider.get(inetSocketAddress, serializer);
             if(channel.isActive()){

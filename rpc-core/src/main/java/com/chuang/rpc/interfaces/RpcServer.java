@@ -2,6 +2,9 @@ package com.chuang.rpc.interfaces;
 
 import com.chuang.rpc.serializer.Serializer;
 
+import java.net.InetSocketAddress;
+import java.util.Set;
+
 /**
  * 服务端类，监听某端口，循环接收连接请求，如果收到请求就创建一个线程，并调用相关方法处理请求
  * 修改为服务端接口，可由socket和netty分别实现
@@ -15,5 +18,11 @@ public interface RpcServer {
     void start();
     // 增加设置序列化器选项
     void setSerializer(Serializer serializer);
+
+    // 用于返回本服务端的host port信息
+    InetSocketAddress getAddress();
+
+    // 获取所有已注册的服务名
+    Set<String> getAllServices();
 
 }

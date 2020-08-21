@@ -4,6 +4,7 @@ import com.chuang.rpc.codec.CommonDecoder;
 import com.chuang.rpc.codec.CommonEncoder;
 import com.chuang.rpc.enumeration.RPCError;
 import com.chuang.rpc.exception.RPCException;
+import com.chuang.rpc.hook.ShutdownHook;
 import com.chuang.rpc.interfaces.RpcServer;
 import com.chuang.rpc.provider.DefaultServiceProvider;
 import com.chuang.rpc.provider.ServiceProvider;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.Set;
 
 /**
  * Netty方式实现的服务端，实现RpcServer接口
@@ -39,7 +41,7 @@ public class NettyServer implements RpcServer {
     // 也因为作为服务端，不清楚何时会有怎样的客户端访问，因此，将host和port固化，有利于减少复杂度
     private final String host;
     private final int port;
-    // V3.0：因为需要将当前服务端及所含服务注册，增加serviceRegistry，serviceProvider则用于保存当前所含服务
+    // V3.0：因为需要将当前服务端及所含服务注册到中心，增加serviceRegistry，serviceProvider则用于保存当前所含服务
     private final ServiceRegistry serviceRegistry;
     private final ServiceProvider serviceProvider;
 
@@ -100,6 +102,10 @@ public class NettyServer implements RpcServer {
                     });
             // 绑定port端口，并阻塞当前程序待绑定完成
             ChannelFuture future = bootstrap.bind(host, port).sync();
+
+            // 加钩子，实现服务端关闭前自动注销服务
+            ShutdownHook.getShutdownHook().addClearAllHook(this);
+
             // 程序阻塞，直到服务端口关闭
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
@@ -113,5 +119,15 @@ public class NettyServer implements RpcServer {
     @Override
     public void setSerializer(Serializer serializer) {
         this.serializer = serializer;
+    }
+
+    @Override
+    public InetSocketAddress getAddress() {
+        return new InetSocketAddress(host, port);
+    }
+
+    @Override
+    public Set<String> getAllServices() {
+        return serviceProvider.getAllServices();
     }
 }

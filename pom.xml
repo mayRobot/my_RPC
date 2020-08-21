@@ -56,6 +56,13 @@
       <artifactId>netty-all</artifactId>
       <version>4.1.51.Final</version>
     </dependency>
+
+    <!---nacos客户端依赖，电脑上也需安装nacos-->
+    <dependency>
+      <groupId>com.alibaba.nacos</groupId>
+      <artifactId>nacos-client</artifactId>
+      <version>1.3.0</version>
+    </dependency>
   </dependencies>
 
   <build>

@@ -2,6 +2,7 @@ package com.chuang.rpc.socket.server;
 
 import com.chuang.rpc.enumeration.RPCError;
 import com.chuang.rpc.exception.RPCException;
+import com.chuang.rpc.hook.ShutdownHook;
 import com.chuang.rpc.interfaces.RpcServer;
 import com.chuang.rpc.provider.DefaultServiceProvider;
 import com.chuang.rpc.provider.ServiceProvider;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -37,12 +39,12 @@ public class SocketServer implements RpcServer {
     // 也因为作为服务端，不清楚何时会有怎样的客户端访问，因此，将host和port固化，有利于减少复杂度
     private final String host;
     private final int port;
-    // V3.0：因为需要将当前服务端及所含服务注册，增加serviceRegistry，serviceProvider则用于保存当前所含服务
+    // V3.0：因为需要将当前服务端及所含服务注册到中心，增加serviceRegistry，serviceProvider则用于保存当前所含服务
     private final ServiceRegistry serviceRegistry;
 
     // 利用线程池平衡生产和消费数量
     private final ExecutorService threadPool;
-    // 用ServiceRegistry对象专门负责服务注册
+    // 用serviceProvider对象专门负责服务注册
     private final ServiceProvider serviceProvider;
     private Serializer serializer;
 
@@ -74,6 +76,10 @@ public class SocketServer implements RpcServer {
     public void start(){
         try(ServerSocket serverSocket = new ServerSocket(port)){
             logger.info("服务器启动...");
+
+            // 加钩子，实现服务端关闭前自动注销服务
+            ShutdownHook.getShutdownHook().addClearAllHook(this);
+
             Socket socket;
             while ((socket = serverSocket.accept()) != null){
                 logger.info("客户端连接成功！IP：{}:{}", socket.getInetAddress().getHostAddress(), socket.getPort());
@@ -108,5 +114,15 @@ public class SocketServer implements RpcServer {
         }catch (IOException e){
             logger.error("连接时发生错误：", e);
         }
+    }
+
+    @Override
+    public InetSocketAddress getAddress() {
+        return new InetSocketAddress(host, port);
+    }
+
+    @Override
+    public Set<String> getAllServices() {
+        return serviceProvider.getAllServices();
     }
 }

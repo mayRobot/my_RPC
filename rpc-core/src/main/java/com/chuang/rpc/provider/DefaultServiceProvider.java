@@ -54,4 +54,9 @@ public class DefaultServiceProvider implements ServiceProvider {
             throw new RPCException(RPCError.SERVICE_NOT_FOUND);
         return serviceObject;
     }
+
+    @Override
+    public Set<String> getAllServices() {
+        return registeredService;
+    }
 }

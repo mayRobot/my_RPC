@@ -1,8 +1,7 @@
 package com.chuang.rpc.registry;
 
 
-import com.chuang.rpc.socket.server.SocketServer;
-
+import com.chuang.rpc.loadbalancer.LoadBalancer;
 import java.net.InetSocketAddress;
 
 /**
@@ -14,4 +13,5 @@ public interface ServiceRegistry {
     void register(String serviceName, InetSocketAddress inetSocketAddress);
     // 获取可提供某服务的服务端地址（加入负载均衡后，可以直接返回最恰当的服务端地址）
     InetSocketAddress lookupService(String serviceName);
+    InetSocketAddress lookupService(String serviceName, LoadBalancer loadBalancer);
 }
